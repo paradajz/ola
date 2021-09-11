@@ -131,6 +131,10 @@ class EnttecPortImpl
   DmxBuffer m_input_buffer;
   std::auto_ptr<ola::Callback0<void> > m_dmx_callback;
 
+  // TX DMX (diff mode)
+  uint8_t internal_buffer_raw_data[DMX_UNIVERSE_SIZE];
+  DmxBuffer internal_buffer = DmxBuffer(internal_buffer_raw_data, DMX_UNIVERSE_SIZE);
+
   // widget params
   std::deque<usb_pro_params_callback*> m_outstanding_param_callbacks;
 

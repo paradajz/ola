@@ -133,16 +133,26 @@ void EnttecPortImpl::Stop() {
  * Send a DMX message
  */
 bool EnttecPortImpl::SendDMX(const DmxBuffer &buffer) {
-  struct {
-    uint8_t start_code;
-    uint8_t dmx[DMX_UNIVERSE_SIZE];
-  } widget_dmx;
 
-  widget_dmx.start_code = DMX512_START_CODE;
-  unsigned int length = DMX_UNIVERSE_SIZE;
-  buffer.Get(widget_dmx.dmx, &length);
-  return m_send_cb->Run(m_ops.send_dmx, reinterpret_cast<uint8_t*>(&widget_dmx),
-                        length + 1);
+  if (buffer != internal_buffer) {
+    std::vector<uint8_t> send_buffer = {};
+
+    for (size_t index = 0; index < buffer.Size(); index++) {
+      if (buffer.Get(index) != internal_buffer.Get(index)) {
+        OLA_INFO << "int buffer: " << std::to_string(internal_buffer.Get(index)) << " new buff: " << std::to_string(buffer.Get(index));
+        send_buffer.push_back((index+1) & 0xFF);
+        send_buffer.push_back((index+1) >> 8);
+        send_buffer.push_back(buffer.Get(index));
+      }
+    }
+
+    internal_buffer = buffer;
+
+    OLA_INFO << "diff buffer! sending with the size " << send_buffer.size();
+    return m_send_cb->Run(m_ops.send_dmx, &send_buffer[0], send_buffer.size());
+  }
+
+  return true;
 }
 
 
